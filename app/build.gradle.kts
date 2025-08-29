@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 android {
@@ -14,10 +15,16 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField("String", "AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI", "\"${System.getenv("AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI") ?: project.properties["AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI"]}\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+    }
+    
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -83,4 +90,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.kotlinx.serialization.json)
 }

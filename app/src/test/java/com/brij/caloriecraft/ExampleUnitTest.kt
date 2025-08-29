@@ -1,4 +1,4 @@
-package com.brij.caloriecrafter
+package com.brij.caloriecraft
 
 import org.junit.Test
 

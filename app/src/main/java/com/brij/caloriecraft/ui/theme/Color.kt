@@ -1,4 +1,4 @@
-package com.brij.caloriecrafter.ui.theme
+package com.brij.caloriecraft.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

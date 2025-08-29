@@ -20,6 +20,7 @@ coroutines = "1.7.3"
 # Ensure this KSP version matches your project's Kotlin version. 1.9.0 -> 1.9.0-1.0.13, 1.9.22 -> 1.9.22-1.0.17 etc.
 # Check for the latest compatible version if you get an error.
 ksp = "1.9.0-1.0.13"
+kotlinxSerialization = "1.6.3"
 
 
 [libraries]
@@ -38,6 +39,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 # Our Divine Libraries
 # Room for Database
@@ -60,3 +62,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 # KSP Plugin
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

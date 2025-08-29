@@ -1,4 +1,4 @@
-package com.brij.caloriecrafter
+package com.brij.caloriecraft
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

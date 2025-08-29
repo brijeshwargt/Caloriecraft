@@ -5,26 +5,26 @@ plugins {
 }
 
 android {
-    namespace = "com.brij.caloriecrafter"
+    namespace = "com.brij.caloriecraft"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
-        applicationId = "com.brij.caloriecrafter"
+        applicationId = "com.brij.caloriecraft"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("String", "AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI", "\"${System.getenv("AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI") ?: project.properties["AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI"]}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${System.getenv("GEMINI_API_KEY") ?: project.properties["GEMINI_API_KEY"]}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
-    }
-    
-    buildFeatures {
-        buildConfig = true
     }
 
     buildTypes {
@@ -91,4 +91,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }

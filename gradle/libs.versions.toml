@@ -3,19 +3,20 @@
 [versions]
 agp = "8.5.0"
 kotlin = "1.9.0" # Your Kotlin version might be slightly different, that's okay
-coreKtx = "1.17.0"
+coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.9.2"
+lifecycleRuntimeKtx = "2.8.0"
 activityCompose = "1.9.0"
 composeBom = "2024.04.01"
 # Our Divine Versions
 # just random text
 room = "2.6.1"
-lifecycle = "2.8.2"
+lifecycle = "2.8.0"
+lifecycle-runtime-compose = "2.8.2"
 navigationCompose = "2.7.7"
-googleAi = "0.4.0"
+googleAi = "0.5.0"
 coroutines = "1.7.3"
 # Ensure this KSP version matches your project's Kotlin version. 1.9.0 -> 1.9.0-1.0.13, 1.9.22 -> 1.9.22-1.0.17 etc.
 # Check for the latest compatible version if you get an error.
@@ -40,7 +41,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime-compose" }
 # Our Divine Libraries
 # Room for Database
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }

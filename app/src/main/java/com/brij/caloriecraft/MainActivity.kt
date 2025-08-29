@@ -1,4 +1,3 @@
-// In file: MainActivity.kt
 package com.brij.caloriecraft
 
 import android.os.Bundle
@@ -19,7 +18,6 @@ import com.brij.caloriecraft.ui.theme.CalorieCraftTheme
 
 class MainActivity : ComponentActivity() {
 
-    // Lazily initialize all our components. They will only be created when first needed.
     private val database by lazy { CalorieCraftDatabase.getDatabase(this) }
     private val geminiService by lazy { GeminiService() }
     private val repository by lazy {
@@ -30,7 +28,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    // This is the modern way to create a ViewModel with dependencies.
     private val mainViewModel: MainViewModel by viewModels {
         MainViewModelFactory(repository)
     }
@@ -39,12 +36,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             CalorieCraftTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Here we pass our ViewModel to the UI
                     MainScreen(viewModel = mainViewModel)
                 }
             }

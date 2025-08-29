@@ -1,23 +1,36 @@
+import java.util.Properties
+
 plugins {
-    id("com.android.application") version "8.5.0"
-    id("org.jetbrains.kotlin.android") version "1.9.0"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
-    id("com.google.devtools.ksp") version "1.9.0-1.0.13"
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
-    namespace = "com.brij.caloriecraft"
-    compileSdk = 34
+    namespace = "com.brij.caloriecrafter"
+    compileSdk = 36
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
-        applicationId = "com.brij.caloriecraft"
+        applicationId = "com.brij.caloriecrafter"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
-        // The correct, secure way to handle your API key.
-        buildConfigField("String", "GEMINI_API_KEY", "\"${System.getenv("GEMINI_API_KEY") ?: project.properties["GEMINI_API_KEY"]}\"")
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { localProperties.load(it) }
+        }
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY")
+
+        // Make the API key available in BuildConfig
+        buildConfigField("String", "GEMINI_API_KEY", "$geminiApiKey")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,6 +59,9 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        compose = true
+    }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
@@ -56,8 +72,25 @@ android {
     }
 }
 
-// This dependencies block is now clean and uses the version catalog correctly.
 dependencies {
+
+    // Room for local database
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+
+    // ViewModel for MVVM architecture
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
+
+    // Navigation for moving between screens in Compose
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // Gemini (Google AI)
+    implementation("com.google.ai.client.generativeai:generativeai:0.4.0")
+
+    // Coroutines for background tasks
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -66,28 +99,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.androidx.runtime)
-
-    // Room
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
-
-    // ViewModel
-    implementation(libs.lifecycle.viewmodel.compose)
-
-    // Navigation
-    implementation(libs.navigation.compose)
-
-    // Gemini
-    implementation(libs.google.ai.client)
-
-    // Coroutines
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.android)
-
-    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -95,4 +106,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }

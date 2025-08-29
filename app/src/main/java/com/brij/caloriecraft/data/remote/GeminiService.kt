@@ -1,6 +1,7 @@
 package com.brij.caloriecraft.data.remote
-import com.brij.caloriecraft.BuildConfig
-import com.google.ai.client.generativeai.GenerativeModel
+
+import com.brij.caloriecrafter.BuildConfig
+import com.google.ai.client.generativeai.*
 import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -24,10 +25,7 @@ class GeminiService {
 
     private val generativeModel = GenerativeModel(
         modelName = "gemini-1.5-flash",
-        apiKey = BuildConfig.GEMINI_API_KEY,
-        generationConfig = generationConfig {
-            responseMimeType = "application/json" // Crucial for getting JSON output
-        }
+        apiKey = BuildConfig.GEMINI_API_KEY
     )
 
     private val json = Json { ignoreUnknownKeys = true } // For safe JSON parsing

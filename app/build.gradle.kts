@@ -1,29 +1,46 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.jetbrains.kotlin.serialization)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.brij.caloriecrafter"
-    compileSdk = 34
+    namespace = "com.brij.caloriecraft"
+    compileSdk = 36
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.brij.caloriecrafter"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("String", "AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI", "\"${System.getenv("AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI") ?: project.properties["AIzaSyBmPhc0vQpxgSG6s9FkqkTI0NoF-cvlQFI"]}\"")
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { localProperties.load(it) }
+        }
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY")
+
+        // Make the API key available in BuildConfig
+        buildConfigField("String", "GEMINI_API_KEY", "$geminiApiKey")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
-    
+
     buildFeatures {
+        compose = true
         buildConfig = true
     }
 
@@ -62,6 +79,7 @@ dependencies {
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
+    ksp(libs.room.compiler)
 
     // ViewModel for MVVM architecture
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
@@ -91,4 +109,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }
+

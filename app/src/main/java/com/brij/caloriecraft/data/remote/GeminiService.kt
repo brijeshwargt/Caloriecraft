@@ -1,6 +1,8 @@
 package com.brij.caloriecraft.data.remote
+
+import android.util.Log
 import com.brij.caloriecraft.BuildConfig
-import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.*
 import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -24,10 +26,7 @@ class GeminiService {
 
     private val generativeModel = GenerativeModel(
         modelName = "gemini-1.5-flash",
-        apiKey = BuildConfig.GEMINI_API_KEY,
-        generationConfig = generationConfig {
-            responseMimeType = "application/json" // Crucial for getting JSON output
-        }
+        apiKey = BuildConfig.GEMINI_API_KEY
     )
 
     private val json = Json { ignoreUnknownKeys = true } // For safe JSON parsing
@@ -45,13 +44,43 @@ class GeminiService {
 
         return try {
             val response = generativeModel.generateContent(prompt)
-            response.text?.let { jsonText ->
-                val parsedResponse = json.decodeFromString<GeminiResponse>(jsonText)
-                Result.success(parsedResponse)
-            } ?: Result.failure(Exception("Empty response from API"))
+
+            response.text?.let { rawJsonText ->
+                // Clean the raw text to extract pure JSON
+                val cleanedJsonText = extractJsonFromMarkdown(rawJsonText)
+
+                if (cleanedJsonText.isBlank()) {
+                    Log.e("GeminiService", "Cleaned JSON text is blank. Original API response: $rawJsonText")
+                    return Result.failure(Exception("Empty or invalid JSON content after cleaning API response."))
+                }
+
+                Log.d("GeminiService", "Cleaned JSON for parsing: $cleanedJsonText")
+                try {
+                    val parsedResponse = json.decodeFromString<GeminiResponse>(cleanedJsonText)
+                    Result.success(parsedResponse)
+                } catch (e: Exception) {
+                    Log.e("GeminiService", "Error decoding JSON: ${e.message}. Cleaned JSON: $cleanedJsonText", e)
+                    Result.failure(Exception("Failed to decode cleaned JSON: ${e.message}"))
+                }
+            } ?: Result.failure(Exception("Empty response text from API"))
         } catch (e: Exception) {
-            // Log the exception e
-            Result.failure(Exception("Failed to parse food input: ${e.message}"))
+            Log.e("GeminiService", "Error calling Gemini API or during response processing", e)
+            Result.failure(Exception("Failed to parse food input due to API error or processing issue: ${e.message}"))
         }
+    }
+
+    private fun extractJsonFromMarkdown(text: String): String {
+        val trimmedText = text.trim()
+        val markdownJsonRegex =
+            """^(?:```(?:json)?\s*)?(\{.*\})(?:\s*```)?$""".toRegex(RegexOption.DOT_MATCHES_ALL)
+        val matchResult = markdownJsonRegex.find(trimmedText)
+        if (matchResult != null && matchResult.groupValues.size > 1) {
+            return matchResult.groupValues[1].trim()
+        }
+        if (trimmedText.startsWith("{") && trimmedText.endsWith("}")) {
+            return trimmedText
+        }
+        Log.w("GeminiService", "Could not extract JSON from markdown. Raw text: $text")
+        return trimmedText
     }
 }

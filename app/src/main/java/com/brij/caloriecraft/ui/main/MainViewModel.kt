@@ -14,6 +14,10 @@ import kotlinx.coroutines.launch
 data class MainUiState(
     val todaysLogs: List<FoodLog> = emptyList(),
     val totalCaloriesToday: Int = 0,
+    val totalProteinToday: Double = 0.0,
+    val totalCarbsToday: Double = 0.0,
+    val totalFibersToday: Double = 0.0,
+    val totalFatsToday: Double = 0.0,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -30,7 +34,11 @@ class MainViewModel(private val repository: LogRepository) : ViewModel() {
                 _uiState.update { currentState ->
                     currentState.copy(
                         todaysLogs = logs,
-                        totalCaloriesToday = logs.sumOf { it.calories }
+                        totalCaloriesToday = logs.sumOf { it.calories },
+                        totalProteinToday = logs.sumOf { it.protein },
+                        totalCarbsToday = logs.sumOf { it.carbs },
+                        totalFibersToday = logs.sumOf { it.fibers },
+                        totalFatsToday = logs.sumOf { it.fats }
                     )
                 }
             }

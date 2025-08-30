@@ -5,6 +5,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,13 +102,10 @@ fun MainScreen(viewModel: MainViewModel) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Display Section
-            Text(
-                "Today's Total Calories: ${uiState.totalCaloriesToday}",
-                style = MaterialTheme.typography.headlineSmall
-            )
+            // Daily Nutritional Totals Card
+            DailyNutritionCard(uiState)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Divider()
 
@@ -112,12 +114,188 @@ fun MainScreen(viewModel: MainViewModel) {
                 Text("No food logged for today.", textAlign = TextAlign.Center)
                 Spacer(modifier = Modifier.weight(1f))
             } else {
+                // Meal Sections
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(uiState.todaysLogs) { log ->
-                        FoodLogItem(log = log)
+                    val mealGroups = groupFoodLogsByMeal(uiState.todaysLogs)
+                    
+                    mealGroups.forEach { (mealType, logs) ->
+                        item {
+                            MealSectionHeader(mealType, logs.sumOf { it.calories })
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        items(logs) { log ->
+                            FoodLogItem(log = log)
+                        }
+                        item { Spacer(modifier = Modifier.height(16.dp)) }
                     }
                 }
             }
+        }
+    }
+}
+
+// Helper function to group food logs by meal type
+private fun groupFoodLogsByMeal(logs: List<FoodLog>): List<Pair<String, List<FoodLog>>> {
+    val mealOrder = listOf("Breakfast", "Lunch", "Dinner", "Snack")
+    return mealOrder.mapNotNull { mealType ->
+        val mealLogs = logs.filter { it.mealType.equals(mealType, ignoreCase = true) }
+        if (mealLogs.isNotEmpty()) {
+            mealType to mealLogs
+        } else null
+    }
+}
+
+@Composable
+fun DailyNutritionCard(uiState: MainUiState) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                "Today's Nutrition Summary",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Calories row with highlight
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                ),
+                elevation = CardDefaults.cardElevation(1.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Total Calories",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "${uiState.totalCaloriesToday} kcal",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Nutrients grid
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                NutrientItem("Protein", "%.1fg".format(uiState.totalProteinToday), MaterialTheme.colorScheme.primary)
+                NutrientItem("Carbs", "%.1fg".format(uiState.totalCarbsToday), MaterialTheme.colorScheme.secondary)
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                NutrientItem("Fiber", "%.1fg".format(uiState.totalFibersToday), MaterialTheme.colorScheme.tertiary)
+                NutrientItem("Fats", "%.1fg".format(uiState.totalFatsToday), MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}
+
+@Composable
+fun NutrientItem(label: String, value: String, color: Color) {
+    Card(
+        modifier = Modifier.padding(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                label,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                color = color
+            )
+        }
+    }
+}
+
+@Composable
+fun MealSectionHeader(mealName: String, totalCalories: Int) {
+    val mealColor = when (mealName.lowercase()) {
+        "breakfast" -> MaterialTheme.colorScheme.primary
+        "lunch" -> MaterialTheme.colorScheme.secondary
+        "dinner" -> MaterialTheme.colorScheme.tertiary
+        "snack" -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.primary
+    }
+    
+    val mealIcon = when (mealName.lowercase()) {
+        "breakfast" -> Icons.Default.Home
+        "lunch" -> Icons.Default.Star
+        "dinner" -> Icons.Default.Check
+        "snack" -> Icons.Default.Favorite
+        else -> Icons.Default.Home
+    }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = mealColor.copy(alpha = 0.1f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = mealIcon,
+                    contentDescription = mealName,
+                    tint = mealColor,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    mealName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = mealColor
+                )
+            }
+            Text(
+                "${totalCalories} kcal",
+                style = MaterialTheme.typography.bodyMedium,
+                color = mealColor
+            )
         }
     }
 }
@@ -130,39 +308,71 @@ fun FoodLogItem(log: FoodLog) {
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(log.foodName, style = MaterialTheme.typography.bodyLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(log.foodName, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "${log.quantity} ${log.unit}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
                 Text(
-                    "${log.quantity} ${log.unit} • ${log.mealType}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    "${log.calories} kcal",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 18.sp
                 )
             }
-            Text(
-                "${log.calories} kcal",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 18.sp
-            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Nutrients row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                NutrientChip("Protein", "%.1fg".format(log.protein), MaterialTheme.colorScheme.primary)
+                NutrientChip("Carbs", "%.1fg".format(log.carbs), MaterialTheme.colorScheme.secondary)
+                NutrientChip("Fiber", "%.1fg".format(log.fibers), MaterialTheme.colorScheme.tertiary)
+                NutrientChip("Fats", "%.1fg".format(log.fats), MaterialTheme.colorScheme.error)
+            }
         }
-        // New row for nutrients
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+    }
+}
+
+@Composable
+fun NutrientChip(label: String, value: String, color: Color) {
+    Card(
+        modifier = Modifier.padding(2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Protein: ${log.protein}g", style = MaterialTheme.typography.bodySmall)
-            Text("Carbs: ${log.carbs}g", style = MaterialTheme.typography.bodySmall)
-            Text("Fibers: ${log.fibers}g", style = MaterialTheme.typography.bodySmall)
-            Text("Fats: ${log.fats}g", style = MaterialTheme.typography.bodySmall)
+            Text(
+                label,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                fontSize = 10.sp
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = color,
+                fontSize = 12.sp
+            )
         }
     }
 }

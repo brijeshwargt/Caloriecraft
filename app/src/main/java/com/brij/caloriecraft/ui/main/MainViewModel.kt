@@ -45,6 +45,12 @@ class MainViewModel(private val repository: LogRepository) : ViewModel() {
         }
     }
 
+    fun deleteFoodLog(log: FoodLog) {
+        viewModelScope.launch {
+            repository.deleteFoodLog(log)
+        }
+    }
+
     fun parseAndLog(userInput: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }

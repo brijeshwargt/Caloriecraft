@@ -14,6 +14,9 @@ interface FoodDao {
 
     @Query("SELECT * FROM food_logs WHERE entryDate BETWEEN :startDate AND :endDate ORDER BY entryDate DESC")
     fun getFoodLogsForDateRange(startDate: Date, endDate: Date): Flow<List<FoodLog>>
+
+    @Query("DELETE FROM food_logs WHERE id = :id")
+    suspend fun deleteFoodLogById(id: Int)
 }
 
 @Dao

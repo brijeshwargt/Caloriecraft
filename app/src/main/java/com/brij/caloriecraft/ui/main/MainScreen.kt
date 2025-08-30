@@ -31,6 +31,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +49,8 @@ fun MainScreen(viewModel: MainViewModel) {
 
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var logToDelete by remember { mutableStateOf<FoodLog?>(null) }
 
     // --- NEW: State for tracking list scroll position and coroutine scope ---
     val lazyListState = rememberLazyListState()
@@ -172,7 +180,10 @@ fun MainScreen(viewModel: MainViewModel) {
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                         items(logs) { log ->
-                            FoodLogItem(log = log)
+                            FoodLogItem(
+                                log = log,
+                                onDeleteClick = { logToDelete = log }
+                                )
                         }
                         item { Spacer(modifier = Modifier.height(16.dp)) }
                     }
@@ -205,6 +216,30 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
+
+    logToDelete?.let { log ->
+        AlertDialog(
+            onDismissRequest = { logToDelete = null },
+            title = { Text("Confirm Deletion") },
+            text = { Text("Are you sure you want to delete '${log.foodName}' from your log?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteFoodLog(log)
+                        logToDelete = null
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { logToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
 }
 // Helper function to group food logs by meal type
 private fun groupFoodLogsByMeal(logs: List<FoodLog>): List<Pair<String, List<FoodLog>>> {
@@ -373,7 +408,7 @@ fun MealSectionHeader(mealName: String, totalCalories: Int) {
 }
 
 @Composable
-fun FoodLogItem(log: FoodLog) {
+fun FoodLogItem(log: FoodLog, onDeleteClick: () -> Unit) { // CHANGED: Added parameter
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -396,17 +431,27 @@ fun FoodLogItem(log: FoodLog) {
                         color = Color.Gray
                     )
                 }
+
                 Text(
                     "${log.calories} kcal",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(horizontal = 8.dp) // Added padding
                 )
+
+                // --- NEW: The delete button ---
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Log",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Nutrients row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -419,7 +464,6 @@ fun FoodLogItem(log: FoodLog) {
         }
     }
 }
-
 @Composable
 fun NutrientChip(label: String, value: String, color: Color) {
     Card(

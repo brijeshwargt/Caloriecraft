@@ -21,6 +21,10 @@ class LogRepository(
         weightDao.insertWeightLog(log)
     }
 
+    suspend fun deleteFoodLog(log: FoodLog) {
+        foodDao.deleteFoodLogById(log.id)
+    }
+
     suspend fun parseAndLogFood(userInput: String): Result<Unit> {
         val result = geminiService.parseFoodInput(userInput)
         return result.map { geminiResponse ->

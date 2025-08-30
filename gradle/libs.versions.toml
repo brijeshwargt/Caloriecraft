@@ -1,7 +1,7 @@
 # This file is the single source of truth for all project dependencies.
 
 [versions]
-agp = "8.9.1"
+agp = "8.12.2"
 kotlin = "2.0.21" # Your Kotlin version might be slightly different, that's okay
 coreKtx = "1.17.0"
 junit = "4.13.2"

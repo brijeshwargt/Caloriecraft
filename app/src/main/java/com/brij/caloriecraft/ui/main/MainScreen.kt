@@ -152,5 +152,17 @@ fun FoodLogItem(log: FoodLog) {
                 fontSize = 18.sp
             )
         }
+        // New row for nutrients
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Protein: ${log.protein}g", style = MaterialTheme.typography.bodySmall)
+            Text("Carbs: ${log.carbs}g", style = MaterialTheme.typography.bodySmall)
+            Text("Fibers: ${log.fibers}g", style = MaterialTheme.typography.bodySmall)
+            Text("Fats: ${log.fats}g", style = MaterialTheme.typography.bodySmall)
+        }
     }
 }

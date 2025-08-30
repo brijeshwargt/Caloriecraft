@@ -13,7 +13,11 @@ data class FoodLog(
     val calories: Int,
     val quantity: Double, // e.g., 200.0
     val unit: String, // e.g., "g", "ml", "pcs"
-    val entryDate: Date
+    val entryDate: Date,
+    val protein: Double = 0.0, // grams
+    val carbs: Double = 0.0,   // grams
+    val fibers: Double = 0.0,  // grams
+    val fats: Double = 0.0     // grams
 )
 
 @Entity(tableName = "weight_logs")

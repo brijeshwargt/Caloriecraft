@@ -13,7 +13,11 @@ data class ParsedFoodItem(
     val foodName: String,
     val calories: Int,
     val quantity: Double,
-    val unit: String
+    val unit: String,
+    val protein: Double = 0.0, // grams
+    val carbs: Double = 0.0,   // grams
+    val fibers: Double = 0.0,  // grams
+    val fats: Double = 0.0     // grams
 )
 
 @Serializable
@@ -33,13 +37,11 @@ class GeminiService {
 
     suspend fun parseFoodInput(userInput: String): Result<GeminiResponse> {
         val prompt = """
-            Analyze the following user input describing a meal. Identify the meal type (Breakfast, Lunch, Dinner, or Snack) and break down each food item mentioned.
-            For each item, provide the food name, estimated total calories for the given quantity, the quantity itself, and the unit (e.g., 'g', 'ml', 'pcs', 'slice', 'chapati').
-            
+            Analyze the following user input describing a meal: "$userInput".
+            Only list foods explicitly mentioned by the user. Do not add, substitute, or infer any other foods. Do not include any food that is not present in the user's input.
+            For each item, provide the food name, estimated total calories for the given quantity, the quantity itself, the unit (e.g., 'g', 'ml', 'pcs', 'slice', 'chapati'), and the estimated protein, carbs, fibers, and fats content (in grams).
             Return the response ONLY as a single, minified JSON object with the following structure:
-            {"mealType": "...", "items": [{"foodName": "...", "calories": ..., "quantity": ..., "unit": "..."}, ...]}
-
-            User input: "$userInput"
+            {"mealType": "...", "items": [{"foodName": "...", "calories": ..., "quantity": ..., "unit": "...", "protein": ..., "carbs": ..., "fibers": ..., "fats": ...}, ...]}
         """.trimIndent()
 
         return try {

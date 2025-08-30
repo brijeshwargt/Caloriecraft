@@ -32,7 +32,11 @@ class LogRepository(
                     calories = item.calories,
                     quantity = item.quantity,
                     unit = item.unit,
-                    entryDate = entryDate
+                    entryDate = entryDate,
+                    protein = item.protein,
+                    carbs = item.carbs,
+                    fibers = item.fibers,
+                    fats = item.fats
                 )
                 foodDao.insertFoodLog(foodLog)
             }

@@ -5,10 +5,11 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.brij.caloriecrafter"
+    namespace = "com.brij.caloriecraft"
     compileSdk = 36
 
     buildFeatures {
@@ -78,6 +79,7 @@ dependencies {
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
+    ksp(libs.room.compiler)
 
     // ViewModel for MVVM architecture
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
@@ -109,3 +111,4 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.runtime.compose)
 }
+

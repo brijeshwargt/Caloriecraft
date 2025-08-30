@@ -11,6 +11,10 @@ data class FoodLog(
     val mealType: String, // "Breakfast", "Lunch", "Dinner", "Snack"
     val foodName: String, // e.g., "Cooked Rice"
     val calories: Int,
+    val protein: Double, // in grams
+    val carbs: Double,   // in grams
+    val fats: Double,    // in grams
+    val fiber: Double,   // in grams
     val quantity: Double, // e.g., 200.0
     val unit: String, // e.g., "g", "ml", "pcs"
     val entryDate: Date

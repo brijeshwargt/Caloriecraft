@@ -21,6 +21,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.brij.caloriecraft.data.local.FoodLog
 import androidx.compose.ui.graphics.Color
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +43,17 @@ fun MainScreen(viewModel: MainViewModel) {
 
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // --- NEW: State for tracking list scroll position and coroutine scope ---
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // --- NEW: A derived state to efficiently check if the button should be shown ---
+    val showButton by remember {
+        derivedStateOf {
+            lazyListState.firstVisibleItemIndex > 0
+        }
+    }
 
     // Display error messages in a Snackbar
     LaunchedEffect(uiState.errorMessage) {
@@ -54,70 +75,97 @@ fun MainScreen(viewModel: MainViewModel) {
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Input Section
-            OutlinedTextField(
-                value = userInput,
-                onValueChange = { userInput = it },
-                label = { Text("Enter your meal (e.g., 'for lunch I had 2 eggs')") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    if (userInput.isNotBlank()) {
-                        viewModel.parseAndLog(userInput)
-                        userInput = ""
-                        focusManager.clearFocus() // Hide keyboard
-                    }
-                })
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    if (userInput.isNotBlank()) {
-                        viewModel.parseAndLog(userInput)
-                        userInput = ""
-                        focusManager.clearFocus() // Hide keyboard
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = userInput.isNotBlank() && !uiState.isLoading
+        // CHANGE 1: The main Column is now a LazyColumn.
+        // This makes the entire content area scrollable.
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp), // Apply horizontal padding for content
+                contentPadding = paddingValues,    // Apply padding from the Scaffold
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Log Food")
-            }
+                // CHANGE 2: Each non-list element is now wrapped in an item { ... } block.
+                item {
+                    OutlinedTextField(
+                        value = userInput,
+                        onValueChange = { userInput = it },
+                        label = { Text("Enter your meal (e.g., 'for lunch I had 2 eggs')") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            if (userInput.isNotBlank()) {
+                                viewModel.parseAndLog(userInput)
+                                userInput = ""
+                                focusManager.clearFocus() // Hide keyboard
+                            }
+                        })
+                    )
+                }
 
-            // Loading Indicator
-            if (uiState.isLoading) {
-                Spacer(modifier = Modifier.height(16.dp))
-                CircularProgressIndicator()
-            }
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                item {
+                    Button(
+                        onClick = {
+                            if (userInput.isNotBlank()) {
+                                viewModel.parseAndLog(userInput)
+                                userInput = ""
+                                focusManager.clearFocus() // Hide keyboard
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = userInput.isNotBlank() && !uiState.isLoading
+                    ) {
+                        Text("Log Food")
+                    }
+                }
 
-            // Daily Nutritional Totals Card
-            DailyNutritionCard(uiState)
+                // Loading Indicator
+                if (uiState.isLoading) {
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        CircularProgressIndicator()
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
-            Divider()
+                // Daily Nutritional Totals Card
+                item {
+                    DailyNutritionCard(uiState)
+                }
 
-            if (uiState.todaysLogs.isEmpty() && !uiState.isLoading) {
-                Spacer(modifier = Modifier.weight(1f))
-                Text("No food logged for today.", textAlign = TextAlign.Center)
-                Spacer(modifier = Modifier.weight(1f))
-            } else {
-                // Meal Sections
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                item {
+                    Divider()
+                }
+
+                // CHANGE 3: The old nested LazyColumn is gone. The logic is now directly
+                // inside the main LazyColumn.
+                if (uiState.todaysLogs.isEmpty() && !uiState.isLoading) {
+                    item {
+                        // Modifier.weight is removed as it doesn't work in a LazyColumn.
+                        // We add padding to give it some space.
+                        Text(
+                            "No food logged for today.",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 48.dp)
+                        )
+                    }
+                } else {
+                    // Meal Sections are now built directly into this LazyColumn
                     val mealGroups = groupFoodLogsByMeal(uiState.todaysLogs)
-                    
+
                     mealGroups.forEach { (mealType, logs) ->
                         item {
                             MealSectionHeader(mealType, logs.sumOf { it.calories })
@@ -130,10 +178,34 @@ fun MainScreen(viewModel: MainViewModel) {
                     }
                 }
             }
+            AnimatedVisibility(
+                visible = showButton,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            lazyListState.animateScrollToItem(0)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                    shape = CircleShape
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Scroll to top",
+                        modifier = Modifier.size(36.dp) // Make the icon a standard size
+                    )
+                }
+            }
         }
     }
 }
-
 // Helper function to group food logs by meal type
 private fun groupFoodLogsByMeal(logs: List<FoodLog>): List<Pair<String, List<FoodLog>>> {
     val mealOrder = listOf("Breakfast", "Lunch", "Dinner", "Snack")
@@ -162,9 +234,9 @@ fun DailyNutritionCard(uiState: MainUiState) {
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Calories row with highlight
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -191,9 +263,9 @@ fun DailyNutritionCard(uiState: MainUiState) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Nutrients grid
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -202,9 +274,9 @@ fun DailyNutritionCard(uiState: MainUiState) {
                 NutrientItem("Protein", "%.1fg".format(uiState.totalProteinToday), MaterialTheme.colorScheme.primary)
                 NutrientItem("Carbs", "%.1fg".format(uiState.totalCarbsToday), MaterialTheme.colorScheme.secondary)
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -252,7 +324,7 @@ fun MealSectionHeader(mealName: String, totalCalories: Int) {
         "snack" -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.primary
     }
-    
+
     val mealIcon = when (mealName.lowercase()) {
         "breakfast" -> Icons.Default.Home
         "lunch" -> Icons.Default.Star
@@ -260,7 +332,7 @@ fun MealSectionHeader(mealName: String, totalCalories: Int) {
         "snack" -> Icons.Default.Favorite
         else -> Icons.Default.Home
     }
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(2.dp),
@@ -292,7 +364,7 @@ fun MealSectionHeader(mealName: String, totalCalories: Int) {
                 )
             }
             Text(
-                "${totalCalories} kcal",
+                "$totalCalories kcal",
                 style = MaterialTheme.typography.bodyMedium,
                 color = mealColor
             )
@@ -331,9 +403,9 @@ fun FoodLogItem(log: FoodLog) {
                     fontSize = 18.sp
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Nutrients row
             Row(
                 modifier = Modifier.fillMaxWidth(),

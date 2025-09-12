@@ -7,6 +7,11 @@ import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
+data class DailyCalorieSummary(
+    val entryDate: Date,
+    val totalCalories: Int
+)
+
 @Dao
 interface FoodDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -17,6 +22,14 @@ interface FoodDao {
 
     @Query("DELETE FROM food_logs WHERE id = :id")
     suspend fun deleteFoodLogById(id: Int)
+
+    @Query("""
+        SELECT SUM(calories) as totalCalories, entryDate
+        FROM food_logs
+        GROUP BY strftime('%Y-%m-%d', entryDate / 1000, 'unixepoch')
+        ORDER BY entryDate DESC
+    """)
+    fun getDailyCalorieSummary(): Flow<List<DailyCalorieSummary>>
 }
 
 @Dao

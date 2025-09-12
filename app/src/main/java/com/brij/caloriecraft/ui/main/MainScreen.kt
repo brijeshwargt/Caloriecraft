@@ -37,10 +37,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.DateRange
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: MainViewModel) {
+fun MainScreen(viewModel: MainViewModel,
+               navController: NavController) {
     // Collect the state from the ViewModel in a lifecycle-aware manner
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -76,6 +79,14 @@ fun MainScreen(viewModel: MainViewModel) {
         topBar = {
             TopAppBar(
                 title = { Text("CalorieCraft") },
+                actions = {
+                    IconButton(onClick = { navController.navigate("history") }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "History"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
@@ -160,7 +171,7 @@ fun MainScreen(viewModel: MainViewModel) {
 
                 // CHANGE 3: The old nested LazyColumn is gone. The logic is now directly
                 // inside the main LazyColumn.
-                if (uiState.todaysLogs.isEmpty() && !uiState.isLoading) {
+                if (uiState.foodLogsForSelectedDate.isEmpty() && !uiState.isLoading) {
                     item {
                         // Modifier.weight is removed as it doesn't work in a LazyColumn.
                         // We add padding to give it some space.
@@ -172,7 +183,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     }
                 } else {
                     // Meal Sections are now built directly into this LazyColumn
-                    val mealGroups = groupFoodLogsByMeal(uiState.todaysLogs)
+                    val mealGroups = groupFoodLogsByMeal(uiState.foodLogsForSelectedDate)
 
                     mealGroups.forEach { (mealType, logs) ->
                         item {
@@ -292,7 +303,7 @@ fun DailyNutritionCard(uiState: MainUiState) {
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        "${uiState.totalCaloriesToday} kcal",
+                        "${uiState.totalCalories} kcal",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -306,8 +317,8 @@ fun DailyNutritionCard(uiState: MainUiState) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                NutrientItem("Protein", "%.1fg".format(uiState.totalProteinToday), MaterialTheme.colorScheme.primary)
-                NutrientItem("Carbs", "%.1fg".format(uiState.totalCarbsToday), MaterialTheme.colorScheme.secondary)
+                NutrientItem("Protein", "%.1fg".format(uiState.totalProtein), MaterialTheme.colorScheme.primary)
+                NutrientItem("Carbs", "%.1fg".format(uiState.totalCarbs), MaterialTheme.colorScheme.secondary)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -316,8 +327,8 @@ fun DailyNutritionCard(uiState: MainUiState) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                NutrientItem("Fiber", "%.1fg".format(uiState.totalFibersToday), MaterialTheme.colorScheme.tertiary)
-                NutrientItem("Fats", "%.1fg".format(uiState.totalFatsToday), MaterialTheme.colorScheme.error)
+                NutrientItem("Fiber", "%.1fg".format(uiState.totalFibers), MaterialTheme.colorScheme.tertiary)
+                NutrientItem("Fats", "%.1fg".format(uiState.totalFats), MaterialTheme.colorScheme.error)
             }
         }
     }

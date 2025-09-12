@@ -15,6 +15,13 @@ import com.brij.caloriecraft.ui.main.MainScreen
 import com.brij.caloriecraft.ui.main.MainViewModel
 import com.brij.caloriecraft.ui.main.MainViewModelFactory
 import com.brij.caloriecraft.ui.theme.CalorieCraftTheme
+import androidx.activity.viewModels
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.brij.caloriecraft.ui.history.HistoryScreen
+import com.brij.caloriecraft.ui.history.HistoryViewModel
+import com.brij.caloriecraft.ui.history.HistoryViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
@@ -32,6 +39,10 @@ class MainActivity : ComponentActivity() {
         MainViewModelFactory(repository)
     }
 
+    private val historyViewModel: HistoryViewModel by viewModels {
+        HistoryViewModelFactory(repository)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -39,8 +50,21 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
-                ) {
-                    MainScreen(viewModel = mainViewModel)
+                ) {val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "main") {
+                        composable("main") {
+                            MainScreen(
+                                viewModel = mainViewModel,
+                                navController = navController
+                            )
+                        }
+                        composable("history") {
+                            HistoryScreen(
+                                viewModel = historyViewModel,
+                                navController = navController
+                            )
+                        }
+                    }
                 }
             }
         }

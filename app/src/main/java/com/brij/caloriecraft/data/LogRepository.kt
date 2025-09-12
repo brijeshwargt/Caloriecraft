@@ -14,7 +14,31 @@ class LogRepository(
     private val geminiService: GeminiService
 ) {
     // Function to get logs for today
-    fun getTodaysFoodLogs() = foodDao.getFoodLogsForDateRange(getStartOfToday(), getEndOfToday())
+    fun getLogsForDate(date: Date) = foodDao.getFoodLogsForDateRange(
+        getStartOfDay(date), getEndOfDay(date)
+    )
+
+    fun getDailyCalorieSummary() = foodDao.getDailyCalorieSummary()
+
+    private fun getStartOfDay(date: Date): Date {
+        return Calendar.getInstance().apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+    }
+
+    private fun getEndOfDay(date: Date): Date {
+        return Calendar.getInstance().apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }.time
+    }
 
     suspend fun addWeightLog(weight: Double) {
         val log = WeightLog(weightInKg = weight, entryDate = Date())
@@ -25,10 +49,10 @@ class LogRepository(
         foodDao.deleteFoodLogById(log.id)
     }
 
-    suspend fun parseAndLogFood(userInput: String): Result<Unit> {
+    suspend fun parseAndLogFood(userInput: String, dateToLog: Date): Result<Unit> {
         val result = geminiService.parseFoodInput(userInput)
         return result.map { geminiResponse ->
-            val entryDate = Date()
+            val entryDate = dateToLog
             geminiResponse.items.forEach { item ->
                 val foodLog = FoodLog(
                     mealType = geminiResponse.mealType,
@@ -65,4 +89,5 @@ class LogRepository(
             set(Calendar.MILLISECOND, 999)
         }.time
     }
+
 }
